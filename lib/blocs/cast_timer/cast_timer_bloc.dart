@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_chrome_cast/flutter_chrome_cast.dart';
 
@@ -37,7 +38,9 @@ class CastTimerBloc extends Bloc<CastTimerEvent, CastTimerState> {
   ) async {
     if (event.remaining.inSeconds <= 0) {
       _ticker?.cancel();
+      debugPrint('⏰ Timer expiré — tentative arrêt Cast');
       await _stopCasting();
+      debugPrint('⏰ Stop casting appelé');
       emit(CastTimerExpired());
     } else {
       emit(CastTimerRunning(event.remaining));
@@ -50,9 +53,20 @@ class CastTimerBloc extends Bloc<CastTimerEvent, CastTimerState> {
   }
 
   Future<void> _stopCasting() async {
-    final connectState = GoogleCastSessionManager.instance.connectionState;
-    if (connectState == GoogleCastConnectState.connected) {
+    try {
+      debugPrint('⏰ Timer expiré — tentative arrêt Cast');
+      // D'abord on se connecte à l'appareil pour prendre le contrôle
+      final device = GoogleCastDiscoveryManager.instance.devices.first;
+      await GoogleCastSessionManager.instance.startSessionWithDevice(device);
+
+      // Petit délai pour laisser la connexion s'établir
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Puis on coupe
       await GoogleCastSessionManager.instance.endSessionAndStopCasting();
+      debugPrint('⏰ Stop casting appelé');
+    } catch (e) {
+      debugPrint('Erreur stop casting: $e');
     }
   }
 

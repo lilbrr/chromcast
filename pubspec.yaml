@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_chrome_cast: ^1.4.6
   flutter_bloc: ^9.1.1
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
